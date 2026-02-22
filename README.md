@@ -141,7 +141,7 @@ For simple custom definitions, Batono provides `createBuildable`.
 It allows you to define lightweight, fully typed `IBuildable` elements without writing a full class. This is intended for **application-level extensions**, not for complex framework integrations.
 
 ```ts
-import { createBuildable, optional } from '@batono/core'
+import {createBuildable, optional, arrayOf, buildable} from '@batono/core'
 
 const Stat = createBuildable('stat', {
   name: String,
@@ -154,17 +154,20 @@ Usage:
 
 ```ts
 bt.graph(
-  Stat({ name: 'Active Users', value: 42 })
+  Stat({name: 'Active Users', value: 42})
 )
 ```
 
-### Features
+### Schema Types
 
-* Runtime validation of required fields
-* Optional fields with default values
-* Immutable `.withX()` modifiers
-* Fully serializable and protocol-compliant
-* No class boilerplate required
+| Type | Usage |
+|---|---|
+| `String` | Required string field |
+| `Number` | Required number field |
+| `Boolean` | Required boolean field |
+| `optional(defaultValue?)` | Optional field with optional default |
+| `arrayOf(type)` | Array of a schema type |
+| `buildable()` | Nested `IBuildable` instance |
 
 ### Optional Fields
 
@@ -183,20 +186,59 @@ Optional fields without a default accept any value:
 extra: optional()
 ```
 
----
+### Arrays
+
+Use `arrayOf` for array fields:
+
+```ts
+const List = createBuildable('list', {
+  title: String,
+  tags: arrayOf(String)
+})
+
+List({title: 'My List', tags: ['a', 'b', 'c']})
+```
+
+### Nested Buildables
+
+Use `buildable()` to accept any `IBuildable` as a field value. The nested buildable is automatically built when the parent is serialized:
+
+```ts
+const Card = createBuildable('card', {
+  title: String,
+  content: buildable()
+})
+
+Card({
+  title: 'My Card',
+  content: Stat({name: 'Users', value: 42})
+})
+```
 
 ### Immutability
 
 Modifier methods return a new instance and never mutate the original:
 
 ```ts
-const a = Stat({ name: 'Users', value: 10 })
+const a = Stat({name: 'Users', value: 10})
 const b = a.withVariant('accent')
 
 // a remains unchanged
 ```
 
----
+Custom modifiers via the third argument:
+
+```ts
+const Stat = createBuildable('stat', {
+  name: String,
+  value: Number,
+  variant: optional('default')
+}, {
+  variant: (variant: string) => ({variant})
+})
+
+Stat({name: 'Users', value: 10}).withVariant('accent')
+```
 
 ### When to Use It
 
