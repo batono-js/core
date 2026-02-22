@@ -1,4 +1,3 @@
-// core/tests/InteractionGraph.test.js
 import {describe, test} from 'node:test'
 import assert from 'node:assert/strict'
 import {bt} from '../dist/index.js'

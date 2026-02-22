@@ -134,6 +134,82 @@ action.withPayload({id: 42}) // returns new instance, does not mutate
 
 ---
 
+## `createBuildable`
+
+For simple custom definitions, Batono provides `createBuildable`.
+
+It allows you to define lightweight, fully typed `IBuildable` elements without writing a full class. This is intended for **application-level extensions**, not for complex framework integrations.
+
+```ts
+import { createBuildable, optional } from '@batono/core'
+
+const Stat = createBuildable('stat', {
+  name: String,
+  value: Number,
+  variant: optional('default')
+})
+```
+
+Usage:
+
+```ts
+bt.graph(
+  Stat({ name: 'Active Users', value: 42 })
+)
+```
+
+### Features
+
+* Runtime validation of required fields
+* Optional fields with default values
+* Immutable `.withX()` modifiers
+* Fully serializable and protocol-compliant
+* No class boilerplate required
+
+### Optional Fields
+
+Optional fields can define a default value:
+
+```ts
+variant: optional('primary')
+```
+
+If omitted, the default is used.
+If explicitly set to `null`, the value remains `null`.
+
+Optional fields without a default accept any value:
+
+```ts
+extra: optional()
+```
+
+---
+
+### Immutability
+
+Modifier methods return a new instance and never mutate the original:
+
+```ts
+const a = Stat({ name: 'Users', value: 10 })
+const b = a.withVariant('accent')
+
+// a remains unchanged
+```
+
+---
+
+### When to Use It
+
+`createBuildable` is ideal for:
+
+* Simple custom UI elements
+* Project-specific definitions
+* Quick extensions without boilerplate
+
+For advanced behavior (custom logic, computed fields, dynamic structures), implement `IBuildable` manually.
+
+---
+
 ## Output Format
 
 > `$schema` identifies the protocol version.
