@@ -136,17 +136,17 @@ action.withPayload({id: 42}) // returns new instance, does not mutate
 
 ## `createBuildable`
 
-For simple custom definitions, Batono provides `createBuildable`.
+For simple custom definitions, Batono provides `createBuildable` together with the `s` schema builder.
 
 It allows you to define lightweight, fully typed `IBuildable` elements without writing a full class. This is intended for **application-level extensions**, not for complex framework integrations.
 
 ```ts
-import {createBuildable, optional, arrayOf, buildable} from '@batono/core'
+import {createBuildable, s} from '@batono/core'
 
 const Stat = createBuildable('stat', {
-  name: String,
-  value: Number,
-  variant: optional('default')
+  name: s.string(),
+  value: s.number(),
+  variant: s.string().optional('default')
 })
 ```
 
@@ -158,55 +158,46 @@ bt.graph(
 )
 ```
 
-### Schema Types
+### Schema Builder — `s`
 
-| Type | Usage |
-|---|---|
-| `String` | Required string field |
-| `Number` | Required number field |
-| `Boolean` | Required boolean field |
-| `optional(defaultValue?)` | Optional field with optional default |
-| `arrayOf(type)` | Array of a schema type |
-| `buildable()` | Nested `IBuildable` instance |
+All field types are defined using the `s` schema builder. Every type supports `.optional()` and `.many()` modifiers via method chaining.
 
-### Optional Fields
-
-Optional fields can define a default value:
+#### Primitive types
 
 ```ts
-variant: optional('primary')
+s.string()   // required string field
+s.number()   // required number field
+s.boolean()  // required boolean field
 ```
 
-If omitted, the default is used.
-If explicitly set to `null`, the value remains `null`.
+#### `.optional(defaultValue?)`
 
-Optional fields without a default accept any value:
+Makes a field optional. Accepts an optional default value.
 
 ```ts
-extra: optional()
+variant: s.string().optional('primary')  // optional with default
+extra:   s.string().optional()           // optional without default, accepts any value
 ```
 
-### Arrays
+If the field is omitted, the default is used. If explicitly set to `null`, the value remains `null`.
 
-Use `arrayOf` for array fields:
+#### `.many()`
+
+Defines the field as an array of the given type.
 
 ```ts
-const List = createBuildable('list', {
-  title: String,
-  tags: arrayOf(String)
-})
-
-List({title: 'My List', tags: ['a', 'b', 'c']})
+tags: s.string().many()    // array of strings
+items: s.buildable().many() // array of IBuildable instances
 ```
 
-### Nested Buildables
+#### `s.buildable()`
 
-Use `buildable()` to accept any `IBuildable` as a field value. The nested buildable is automatically built when the parent is serialized:
+Accepts any `IBuildable` instance as a field value. The nested buildable is automatically built when the parent is serialized.
 
 ```ts
 const Card = createBuildable('card', {
-  title: String,
-  content: buildable()
+  title: s.string(),
+  content: s.buildable()
 })
 
 Card({
@@ -214,6 +205,18 @@ Card({
   content: Stat({name: 'Users', value: 42})
 })
 ```
+
+### Schema Reference
+
+| Schema | TypeScript type | Description |
+|---|---|---|
+| `s.string()` | `string` | Required string |
+| `s.number()` | `number` | Required number |
+| `s.boolean()` | `boolean` | Required boolean |
+| `s.buildable()` | `IBuildable` | Required nested buildable |
+| `s.string().optional(default?)` | `string \| undefined` | Optional string |
+| `s.string().many()` | `string[]` | Array of strings |
+| `s.buildable().many()` | `IBuildable[]` | Array of buildables |
 
 ### Immutability
 
@@ -230,9 +233,9 @@ Custom modifiers via the third argument:
 
 ```ts
 const Stat = createBuildable('stat', {
-  name: String,
-  value: Number,
-  variant: optional('default')
+  name: s.string(),
+  value: s.number(),
+  variant: s.string().optional('default')
 }, {
   variant: (variant: string) => ({variant})
 })

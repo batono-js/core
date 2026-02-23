@@ -1,4 +1,4 @@
-import {arrayOf, buildable, createBuildable, optional} from "../dist/utils/createBuildable.js";
+import {createBuildable, s} from "../dist/index.js";
 import {describe, test} from 'node:test'
 import assert from 'node:assert/strict'
 import {bt} from '../dist/index.js'
@@ -6,9 +6,9 @@ import {bt} from '../dist/index.js'
 describe('createBuildable', () => {
 
   const Stat = createBuildable('stat', {
-    name: String,
-    num: Number,
-    variant: optional('foo')
+    name: s.string(),
+    num: s.number(),
+    variant: s.string().optional('foo')
   }, {
     variant: (variant) => ({variant})
   })
@@ -41,7 +41,7 @@ describe('createBuildable', () => {
   test('throws on missing required field', () => {
     assert.throws(
       () => Stat({num: 1}),
-      /missing required field "name"/
+      /missing required/
     )
   })
 
@@ -59,8 +59,8 @@ describe('createBuildable', () => {
 
   test('accepts any type for optional field without default', () => {
     const Flexible = createBuildable('flexible', {
-      name: String,
-      extra: optional()
+      name: s.string(),
+      extra: s.string().optional()
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(Flexible({name: 'test', extra: '42'}))))
@@ -69,20 +69,43 @@ describe('createBuildable', () => {
 
   test('overrides default value when optional field is provided', () => {
     const WithDefault = createBuildable('withdefault', {
-      name: String,
-      variant: optional('primary')
+      name: s.string(),
+      variant: s.string().optional('primary')
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(WithDefault({name: 'test', variant: 'secondary'}))))
     assert.equal(json.layout.variant, 'secondary')
   })
+
+  test('validates type against default value type for optional field with default', () => {
+    const WithDefault = createBuildable('withdefault', {
+      name: s.string(),
+      variant: s.string().optional('foo')
+    })
+
+    assert.throws(
+      () => WithDefault({name: 'test', variant: 42}),
+      /expected string, got number/
+    )
+  })
+
+  test('uses default value when optional field with default is omitted', () => {
+    const WithDefault = createBuildable('withdefault', {
+      name: s.string(),
+      variant: s.string().optional('primary')
+    })
+
+    const json = JSON.parse(JSON.stringify(bt.graph(WithDefault({name: 'test'}))))
+    assert.equal(json.layout.variant, 'primary')
+  })
+
 })
 
 describe('createBuildable — arrayOf', () => {
 
   const List = createBuildable('list', {
-    title: String,
-    tags: arrayOf(String)
+    title: s.string(),
+    tags: s.string().many()
   })
 
   test('builds with array field', () => {
@@ -107,13 +130,13 @@ describe('createBuildable — arrayOf', () => {
 describe('createBuildable — buildable', () => {
 
   const Stat = createBuildable('stat', {
-    name: String,
-    value: Number,
+    name: s.string(),
+    value: s.number(),
   })
 
   const Card = createBuildable('card', {
-    title: String,
-    content: buildable()
+    title: s.string(),
+    content: s.buildable()
   })
 
   test('builds nested buildable', () => {
@@ -143,12 +166,12 @@ describe('createBuildable — buildable', () => {
 
   test('builds array of nested buildables', () => {
     const Item = createBuildable('item', {
-      label: String
+      label: s.string()
     })
 
     const List = createBuildable('list', {
-      title: String,
-      items: arrayOf(buildable())
+      title: s.string(),
+      items: s.buildable().many()
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(List({
@@ -165,5 +188,23 @@ describe('createBuildable — buildable', () => {
     assert.equal(json.layout.items[0].label, 'A')
     assert.equal(json.layout.items[2].label, 'C')
     assert.equal(json.layout.items[0].$graph, json.$graph)
+  })
+
+  test('accepts boolean value', () => {
+    const Item = createBuildable('item', {
+      active: s.boolean()
+    })
+    const json = JSON.parse(JSON.stringify(bt.graph(Item({active: true}))))
+    assert.equal(json.layout.active, true)
+  })
+
+  test('throws on wrong type for boolean field', () => {
+    const Item = createBuildable('item', {
+      active: s.boolean()
+    })
+    assert.throws(
+      () => Item({active: 'true'}),
+      /expected boolean, got string/
+    )
   })
 })
