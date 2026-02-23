@@ -1,4 +1,5 @@
 import {ValidationError} from "./ValidationError.js";
+import type {When} from "../condition-when/when.js";
 
 type BaseType = 'string' | 'number' | 'boolean' | 'buildable' | 'union'
 
@@ -11,6 +12,8 @@ export interface FieldDescriptor {
   union: FieldDescriptor[] | null
   containsBuildable: boolean
 }
+
+export type Whenable<T> = T | When<T>
 
 export class FieldBuilder<T, TOptional extends boolean = false> {
   readonly #baseType: BaseType
@@ -43,8 +46,8 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
     return f
   }
 
-  many(): FieldBuilder<T[], TOptional> {
-    const f = this.#clone<T[], TOptional>()
+  many(): FieldBuilder<Whenable<T>[], TOptional> {
+    const f = this.#clone<Whenable<T>[], TOptional>()
     f.#many = true
     return f
   }

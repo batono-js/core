@@ -134,6 +134,68 @@ action.withPayload({id: 42}) // returns new instance, does not mutate
 
 ---
 
+## `when`
+
+`when` is a lightweight conditional utility for expressing optional values inline — without `if` statements or ternaries scattered across layout definitions.
+
+```ts
+import {when} from '@batono/core'
+```
+
+### Basic usage
+
+```ts
+when(condition, value).else(fallback)
+```
+
+```ts
+const badge = when(user.isAdmin, AdminBadge({label: 'Admin'})).else(GuestBadge())
+```
+
+### Chaining with `elseif`
+
+```ts
+when(user.isAdmin, AdminView())
+  .elseif(user.isModerator, ModeratorView())
+  .else(DefaultView())
+```
+
+### Using `when` inside `createBuildable` fields
+
+`when` integrates directly into `createBuildable` schema fields. For scalar fields the resolved value is passed through as-is. For array fields (`.many()`), items that resolve to `false` are automatically filtered out — making conditional list entries ergonomic:
+
+```ts
+const List = createBuildable('list', {
+  title: s.string(),
+  items: s.buildable().many()
+})
+
+List({
+  title: 'Actions',
+  items: [
+    ViewButton({label: 'View'}),
+    when(canEdit, EditButton({label: 'Edit'})),      // filtered out if false
+    when(canDelete, DeleteButton({label: 'Delete'})),
+  ]
+})
+```
+
+For single buildable fields:
+
+```ts
+const Card = createBuildable('card', {
+  title: s.string(),
+  content: s.buildable()
+})
+
+Card({
+  title: 'Stats',
+  content: when(isDetailed, DetailView({...})).else(SummaryView({...}))
+})
+```
+
+---
+
 ## `createBuildable`
 
 For simple custom definitions, Batono provides `createBuildable` together with the `s` schema builder.
@@ -179,20 +241,20 @@ variant: s.string().optional('primary')  // optional with default
 extra:   s.string().optional()           // optional without default, accepts any value
 ```
 
-If the field is omitted, the default is used. If explicitly set to `null`, the value remains `null`.
+If the field is omitted or explicitly set to `undefined`, the default is used.
 
 #### `.many()`
 
-Defines the field as an array of the given type.
+Defines the field as an array of the given type. `when()` instances inside the array are resolved automatically and falsy entries are filtered out.
 
 ```ts
-tags: s.string().many()    // array of strings
+tags: s.string().many()     // array of strings
 items: s.buildable().many() // array of IBuildable instances
 ```
 
 #### `s.buildable()`
 
-Accepts any `IBuildable` instance as a field value. The nested buildable is automatically built when the parent is serialized.
+Accepts any `IBuildable` instance as a field value, including `when()` expressions. The nested buildable is automatically built when the parent is serialized.
 
 ```ts
 const Card = createBuildable('card', {
@@ -213,10 +275,10 @@ Card({
 | `s.string()` | `string` | Required string |
 | `s.number()` | `number` | Required number |
 | `s.boolean()` | `boolean` | Required boolean |
-| `s.buildable()` | `IBuildable` | Required nested buildable |
+| `s.buildable()` | `IBuildable \| When<IBuildable>` | Required nested buildable, supports `when()` |
 | `s.string().optional(default?)` | `string \| undefined` | Optional string |
 | `s.string().many()` | `string[]` | Array of strings |
-| `s.buildable().many()` | `IBuildable[]` | Array of buildables |
+| `s.buildable().many()` | `Array<IBuildable \| When<IBuildable>>` | Array of buildables, supports `when()` |
 
 ### Immutability
 

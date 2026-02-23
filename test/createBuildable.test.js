@@ -1,7 +1,6 @@
-import {createBuildable, s} from "../dist/index.js";
+import {bt, createBuildable, s} from "../dist/index.js";
 import {describe, test} from 'node:test'
 import assert from 'node:assert/strict'
-import {bt} from '../dist/index.js'
 
 describe('createBuildable', () => {
 
@@ -41,7 +40,7 @@ describe('createBuildable', () => {
   test('throws on missing required field', () => {
     assert.throws(
       () => Stat({num: 1}),
-      /missing required/
+      /is required/
     )
   })
 
@@ -205,6 +204,61 @@ describe('createBuildable — buildable', () => {
     assert.throws(
       () => Item({active: 'true'}),
       /expected boolean, got string/
+    )
+  })
+
+  // Tests for the optional-field branch in createBuildable:
+// if (descriptor.optional) continue
+
+  test('optional field can be omitted entirely', () => {
+    const built = createBuildable('test', {
+      name: s.string(),
+      tag: s.string().optional(),
+    })
+
+    assert.doesNotThrow(() => built({name: 'foo'}))
+  })
+
+  test('optional field can be passed as undefined explicitly', () => {
+    const built = createBuildable('test', {
+      name: s.string(),
+      tag: s.string().optional(),
+    })
+
+    assert.doesNotThrow(() => built({name: 'foo', tag: undefined}))
+  })
+
+  test('optional field with default uses default when omitted', () => {
+    const built = createBuildable('test', {
+      name: s.string(),
+      tag: s.string().optional('default-tag'),
+    })
+
+    // The instance is built without throwing; the default is applied internally.
+    assert.doesNotThrow(() => built({name: 'foo'}))
+  })
+
+  test('required field throws when omitted', () => {
+    const built = createBuildable('test', {
+      name: s.string(),
+      tag: s.string(),
+    })
+
+    assert.throws(
+      () => built({name: 'foo'}),
+      (err) => err.code === 'missing_field'
+    )
+  })
+
+  test('required field throws when explicitly undefined', () => {
+    const built = createBuildable('test', {
+      name: s.string(),
+      tag: s.string(),
+    })
+
+    assert.throws(
+      () => built({name: 'foo', tag: undefined}),
+      (err) => err.code === 'missing_field'
     )
   })
 })

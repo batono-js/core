@@ -6,6 +6,14 @@ import {buildDefinition} from "../../BuildDefinition.js";
 import {__BATONO_INTERNAL_BUILD_SYMBOL} from "../../internal/index.js";
 import type {IBuildable, IInteractionGraph} from "../../types/types.js";
 import {validateField} from "./validateField.js";
+import {ValidationError} from "./ValidationError.js";
+import {When} from "../condition-when/when.js";
+
+const resolveWhen = (value: unknown): unknown =>
+  value instanceof When ? value.valueOf() : value
+
+const resolveArray = (arr: unknown[]): unknown[] =>
+  arr.map(resolveWhen).filter(v => v !== false && v !== null && v !== undefined)
 
 
 export function createBuildable<
@@ -26,22 +34,26 @@ export function createBuildable<
     for (const key of schemaKeys) {
       const descriptor = descriptors[key]!
 
-      if (!(key in data)) {
+      if (!(key in data) || data[key] === undefined) {
         if (descriptor.optional) continue
-        throw new Error(`createBuildable [${type}]: missing required field "${key}"`)
+        throw new ValidationError('missing_field', type, key, 'is required')
       }
 
-      validateField(type, key, data[key], descriptor)
+      const value = descriptor.many && Array.isArray(data[key])
+        ? resolveArray(data[key] as unknown[])
+        : resolveWhen(data[key])
+
+      validateField(type, key, value, descriptor)
     }
   }
 
   const createInstance = (data: InferSchema<TSchema>): BuildableInstance<InferSchema<TSchema>, TMethods> => {
     const withMethods: Record<string, unknown> = {}
 
-    for (const key in methods) {
+    for (const key of Object.keys(methods)) {
       const methodName = `with${key.charAt(0).toUpperCase()}${key.slice(1)}`
       withMethods[methodName] = (arg: unknown) => {
-        const patch = methods[key]!(arg)
+        const patch = (methods as Record<string, (arg: unknown) => Partial<InferSchema<TSchema>>>)[key]!(arg)
         return createInstance({...data, ...patch})
       }
     }
@@ -78,14 +90,26 @@ export function createBuildable<
   }
 
   return (args: InferSchema<TSchema>) => {
-    validate(args as Record<string, unknown>)
-    const dataWithDefaults = {...args}
+    const dataWithDefaults = {...args} as Record<string, unknown>
+
     for (const key of schemaKeys) {
       const descriptor = descriptors[key]!
-      if (descriptor.optional && !(key in dataWithDefaults) && descriptor.defaultValue !== undefined) {
-        (dataWithDefaults as Record<string, unknown>)[key] = descriptor.defaultValue
+
+      if (descriptor.optional && dataWithDefaults[key] === undefined && descriptor.defaultValue !== undefined) {
+        dataWithDefaults[key] = descriptor.defaultValue
+      }
+
+      // Resolve When *before* validate so type checks see the real value
+      if (descriptor.many && Array.isArray(dataWithDefaults[key])) {
+        dataWithDefaults[key] = resolveArray(dataWithDefaults[key] as unknown[])
+      } else {
+        dataWithDefaults[key] = resolveWhen(dataWithDefaults[key])
       }
     }
-    return createInstance(dataWithDefaults)
+
+    // FIX 1 cont.: validate after resolution so When-instances are unwrapped
+    validate(dataWithDefaults)
+
+    return createInstance(dataWithDefaults as InferSchema<TSchema>)
   }
 }
