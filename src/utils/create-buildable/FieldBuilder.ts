@@ -1,7 +1,7 @@
 import {ValidationError} from "./ValidationError.js";
 import type {When} from "../condition-when/when.js";
 
-type BaseType = 'string' | 'number' | 'boolean' | 'buildable' | 'union' | 'scope'
+type BaseType = 'string' | 'number' | 'boolean' | 'buildable' | 'union' | 'scope' | 'any' | 'object'
 
 export interface FieldDescriptor {
   baseType: BaseType
@@ -10,7 +10,8 @@ export interface FieldDescriptor {
   nullable: boolean
   many: boolean
   union: FieldDescriptor[] | null
-  containsBuildable: boolean
+  containsBuildable: boolean,
+  objectSchema: Record<string, FieldDescriptor> | null
 }
 
 export type Whenable<T> = T | When<T>
@@ -21,14 +22,21 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
   #defaultValue: unknown = undefined
   #nullable: boolean = false
   #many: boolean = false
+  #objectSchema: Record<string, FieldBuilder<unknown>> | null = null
+
   readonly #union: FieldBuilder<unknown, boolean>[] | null = null
 
-  constructor(baseType: BaseType, union: FieldBuilder<unknown, boolean>[] | null = null) {
+  constructor(
+    baseType: BaseType,
+    union: FieldBuilder<unknown, boolean>[] | null = null,
+    objectSchema: Record<string, FieldBuilder<unknown>> | null = null
+  ) {
     this.#baseType = baseType
 
     if (baseType === 'union' && (!Array.isArray(union) || union.length === 0)) {
       throw new ValidationError('invalid_union', 'schema', 'union', 'must have at least one type')
     }
+    this.#objectSchema = objectSchema
     this.#union = union
   }
 
@@ -76,7 +84,12 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
       nullable: this.#nullable,
       many: this.#many,
       union,
-      containsBuildable
+      containsBuildable,
+      objectSchema: this.#objectSchema
+        ? Object.fromEntries(
+          Object.entries(this.#objectSchema).map(([k, v]) => [k, v.toDescriptor()])
+        )
+        : null
     }
   }
 }

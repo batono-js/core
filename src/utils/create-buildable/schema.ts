@@ -1,9 +1,12 @@
 import {FieldBuilder, type Whenable} from "./FieldBuilder.js";
 import type {IBuildable} from "../../types/types.js";
-import type {InferField} from "./schema-types.js";
+import type {InferField, InferSchema} from "./schema-types.js";
 import type {Scope} from "../scope/Scope.js";
 
 export const s = {
+  any: (): FieldBuilder<string> => new FieldBuilder('any'),
+  object: <TSchema extends Record<string, FieldBuilder<unknown>>>(schema: TSchema): FieldBuilder<InferSchema<TSchema>> =>
+    new FieldBuilder('object', null, schema),
   string: (): FieldBuilder<string> => new FieldBuilder('string'),
   number: (): FieldBuilder<number> => new FieldBuilder('number'),
   boolean: (): FieldBuilder<boolean> => new FieldBuilder('boolean'),
