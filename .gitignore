@@ -3,5 +3,5 @@ node_modules/
 tmp/
 dist/
 lcov.info
-
 coverage/
+bump
