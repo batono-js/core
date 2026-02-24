@@ -1,5 +1,6 @@
 import {FieldBuilder} from "./FieldBuilder.js";
 import type {IBuildable} from "../../types/types.js";
+import type {BuildResult} from "../../types/results.js";
 
 export type InferField<T extends FieldBuilder<unknown>> =
   T extends FieldBuilder<infer U> ? U : unknown
@@ -26,7 +27,7 @@ type WithMethods<TData, TMethods extends Record<string, (arg: any) => Partial<TD
 }
 
 export type BuildableInstance<TData, TMethods extends Record<string, (arg: any) => Partial<TData>>> =
-  IBuildable & WithMethods<TData, TMethods>
+  IBuildable<BuildResult<TData>> & WithMethods<TData, TMethods>
 
 export  type BuildableConstructor<TData, TMethods extends Record<string, (arg: any) => Partial<TData>>> =
   (args: TData) => BuildableInstance<TData, TMethods>

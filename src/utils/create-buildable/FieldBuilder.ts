@@ -1,10 +1,10 @@
 import {ValidationError} from "./ValidationError.js";
 import type {When} from "../condition-when/when.js";
 
-type BaseType = 'string' | 'number' | 'boolean' | 'buildable' | 'union'
+type BaseType = 'string' | 'number' | 'boolean' | 'buildable' | 'union' | 'scope'
 
 export interface FieldDescriptor {
-  baseType: 'string' | 'number' | 'boolean' | 'buildable' | 'union'
+  baseType: BaseType
   optional: boolean
   defaultValue: unknown
   nullable: boolean
@@ -65,8 +65,9 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
 
     const union = this.#union?.map(f => f.toDescriptor()) ?? null
     const containsBuildable =
-      this.#baseType === 'buildable' ||
-      (this.#baseType === 'union' && union!.some(d => d.containsBuildable))
+      this.#baseType === 'buildable'
+      || this.#baseType === 'scope'
+      || (this.#baseType === 'union' && union!.some(d => d.containsBuildable))
 
     return {
       baseType: this.#baseType,

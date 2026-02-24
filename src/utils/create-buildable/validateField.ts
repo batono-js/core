@@ -1,10 +1,18 @@
 import type {FieldDescriptor} from "./FieldBuilder.js";
 import {ValidationError} from "./ValidationError.js";
 import {isBuildableItem} from "./utils.js";
+import {Scope} from "../scope/Scope.js";
 
 export function validateField(type: string, key: string, value: unknown, descriptor: FieldDescriptor) {
   if (value == null && descriptor.nullable) return
   if (value == null && descriptor.optional) return
+
+  if (descriptor.baseType === 'scope') {
+    if (!(value instanceof Scope)) {
+      throw new ValidationError('invalid_type', type, key, `expected Scope, got ${typeof value}`)
+    }
+    return
+  }
 
   if (descriptor.many) {
     if (!Array.isArray(value)) {

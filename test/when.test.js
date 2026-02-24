@@ -1,6 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {when} from "../dist/utils/condition-when/when.js";
+import {bt, createBuildable, s} from "../dist/index.js";
 
 test('when returns value via valueOf when condition is true', () => {
   const result = when(true, 'foo')
@@ -31,4 +32,23 @@ test('when.elseif returns second match', () => {
 
 test('when.elseif falls through to else', () => {
   assert.equal(when(false, 'foo').elseif(false, 'bar').else('baz'), 'baz')
+})
+
+test('resolveWhen resolves When instance before validation', () => {
+  const List = createBuildable('list', {
+    items: s.buildable().many()
+  })
+
+  const Item = createBuildable('item', {label: s.string()})
+  const item = Item({label: 'foo'})
+
+  const json = JSON.parse(JSON.stringify(bt.graph(List({
+    items: [
+      when(true, item),
+      when(false, item)
+    ]
+  }))))
+
+  assert.equal(json.layout.items.length, 1)
+  assert.equal(json.layout.items[0].label, 'foo')
 })

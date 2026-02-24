@@ -1,7 +1,7 @@
 import {type BuildableConstructor, type BuildableInstance, type InferSchema,} from "./schema-types.js";
 import {isBuildableItem} from "./utils.js";
 import type {FieldBuilder} from "./FieldBuilder.js";
-import type {Defined} from "../../types/results.js";
+import type {BuildResult} from "../../types/results.js";
 import {buildDefinition} from "../../BuildDefinition.js";
 import {__BATONO_INTERNAL_BUILD_SYMBOL} from "../../internal/index.js";
 import type {IBuildable, IInteractionGraph} from "../../types/types.js";
@@ -60,7 +60,7 @@ export function createBuildable<
 
     return {
       ...withMethods,
-      [__BATONO_INTERNAL_BUILD_SYMBOL](ig: IInteractionGraph): Defined {
+      [__BATONO_INTERNAL_BUILD_SYMBOL](ig: IInteractionGraph): BuildResult<InferSchema<TSchema>> {
         const builtData: Record<string, unknown> = {}
 
         for (const key of schemaKeys) {
@@ -84,7 +84,9 @@ export function createBuildable<
           }
         }
 
-        return buildDefinition(ig, {type, ...builtData} as { type: string } & Record<string, unknown>)
+        return buildDefinition(ig, {type, ...builtData} as {
+          type: string
+        } & InferSchema<TSchema>)
       }
     } as BuildableInstance<InferSchema<TSchema>, TMethods>
   }
