@@ -21,6 +21,8 @@ export interface IInteractionGraph {
   [INTERNAL_ADD_ACTION_KEY](action: IDefinedAction): string
 
   toJSON(): InteractionGraphPayload
+
+  nextToken(prefix: string): string
 }
 
 export interface IBuildable<T extends Defined = Defined> {

@@ -5,7 +5,7 @@ import {
 } from "./internal/internalKeys.js";
 import type {IBuildable, IDefinedAction, IInteractionGraph, InteractionGraphPayload} from "./types/types.js";
 import type {Defined} from "./types/results.js";
-import {generateToken} from "./utils/generateToken.js";
+import {randomUUID} from 'node:crypto'
 
 export class InteractionGraph implements IInteractionGraph {
 
@@ -15,9 +15,11 @@ export class InteractionGraph implements IInteractionGraph {
 
   readonly #layout: IBuildable
 
-  readonly #$graph: string = generateToken('g')
+  readonly #$graph: string = `g_${randomUUID().slice(0, 8)}`
 
   readonly #actionRegistry: Map<IDefinedAction, string> = new Map()
+
+  #tokenCounter: number = 0
 
   constructor(layout: IBuildable) {
     this.#layout = layout
@@ -29,6 +31,10 @@ export class InteractionGraph implements IInteractionGraph {
 
   get $schema(): string {
     return this.#$schema
+  }
+
+  nextToken(prefix: string): string {
+    return `${prefix}${++this.#tokenCounter}`
   }
 
   [INTERNAL_ADD_ACTION_KEY](action: IDefinedAction): string {

@@ -3,20 +3,17 @@ import type {IInteractionGraph} from "../../types/types.js";
 import type {ScopeResult} from "../../types/results.js";
 
 export class Scope {
-  readonly #token: string
+  #token?: string
 
-  constructor(token: string) {
-    this.#token = token
-  }
 
-  get token(): string {
-    return this.#token
+  token(ig: IInteractionGraph): string {
+    return this.#token ??= ig.nextToken('s_')
   }
 
   [__BATONO_INTERNAL_BUILD_SYMBOL](ig: IInteractionGraph): ScopeResult {
     return buildDefinition(ig, {
       type: 'scope' as const,
-      token: this.#token
+      token: this.token(ig)
     })
   }
 }

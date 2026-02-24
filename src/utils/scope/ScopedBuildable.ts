@@ -15,6 +15,6 @@ export class ScopedBuildable<T extends Defined> implements IBuildable<DefinedNod
   [__BATONO_INTERNAL_BUILD_SYMBOL](ig: IInteractionGraph): DefinedNode<T> {
     const result = this.#inner[__BATONO_INTERNAL_BUILD_SYMBOL](ig) as DefinedNode<T>
     const existing = result.$node ?? []
-    return {...result, $node: [...existing, this.#scope.token]}
+    return {...result, $node: [...existing, this.#scope.token(ig)]}
   }
 }

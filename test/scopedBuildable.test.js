@@ -2,6 +2,7 @@ import {describe, test} from 'node:test'
 import assert from 'node:assert/strict'
 import {bt, scopable} from '../dist/index.js'
 import {createBuildable, s} from '../dist/utils/create-buildable/index.js'
+import {__BATONO_INTERNAL_BUILD_SYMBOL} from "../dist/internal/index.js";
 
 describe('ScopedBuildable', () => {
 
@@ -12,8 +13,9 @@ describe('ScopedBuildable', () => {
   test('adds $node to built result', () => {
     const scope = bt.createScope()
     const item = Item({label: 'foo'})
-    const json = JSON.parse(JSON.stringify(bt.graph(bt.scope(item, scope))))
-    assert.deepEqual(json.layout.$node, [scope.token])
+    const graph = bt.graph(bt.scope(item, scope))
+    const json = JSON.parse(JSON.stringify(graph))
+    assert.deepEqual(json.layout.$node, [scope.token(graph)])
   })
 
   test('preserves original node type', () => {
@@ -32,9 +34,13 @@ describe('ScopedBuildable', () => {
   })
 
   test('two different scopes generate different tokens', () => {
+    const graph = bt.graph({
+      [__BATONO_INTERNAL_BUILD_SYMBOL](graph) {
+      }
+    })
     const scope1 = bt.createScope()
     const scope2 = bt.createScope()
-    assert.notEqual(scope1.token, scope2.token)
+    assert.notEqual(scope1.token(graph), scope2.token(graph))
   })
 
   test('same scope used on multiple nodes produces same $node token', () => {
@@ -48,7 +54,7 @@ describe('ScopedBuildable', () => {
       items: s.buildable().many()
     })
 
-    const json = bt.graph(
+    const graph = bt.graph(
       rows({
           items: [
             row({
@@ -60,10 +66,12 @@ describe('ScopedBuildable', () => {
           ]
         }
       )
-    ).toJSON()
+    )
 
-    assert.deepEqual(json.layout.items[0].items[0].$node, [scope.token])
-    assert.deepEqual(json.layout.items[1].items[0].$node, [scope.token])
+    const json = graph.toJSON()
+
+    assert.deepEqual(json.layout.items[0].items[0].$node, [scope.token(graph)])
+    assert.deepEqual(json.layout.items[1].items[0].$node, [scope.token(graph)])
     assert.deepEqual(json.layout.items[0].items[0].$node, json.layout.items[1].items[0].$node)
   })
 
