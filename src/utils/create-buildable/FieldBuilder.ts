@@ -19,7 +19,6 @@ export interface FieldDescriptor {
   nullable: boolean
   many: boolean
   union: FieldDescriptor[] | null
-  containsBuildable: boolean,
   objectSchema: Record<string, FieldDescriptor> | null
   enumValues: string[] | null
   recordValueType: FieldDescriptor | null
@@ -36,8 +35,8 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
   readonly #objectSchema: Record<string, FieldBuilder<unknown>> | null = null
   readonly #union: FieldBuilder<unknown, boolean>[] | null = null
 
-  #enumValues: string[] | null = null
-  #recordValueType: FieldBuilder<unknown> | null = null
+  readonly #enumValues: string[] | null = null
+  readonly #recordValueType: FieldBuilder<unknown> | null = null
 
   constructor(
     baseType: BaseType,
@@ -94,13 +93,6 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
         Object.entries(this.#objectSchema).map(([k, v]) => [k, v.toDescriptor()])
       ) : null
 
-    const containsBuildable =
-      this.#baseType === 'buildable'
-      || this.#baseType === 'scope'
-      || (this.#baseType === 'union' && union!.some(d => d.containsBuildable))
-      || (this.#baseType === 'object' && Object.values(objectSchema!).some(d => d.containsBuildable))
-      || (this.#baseType === 'record' && !!this.#recordValueType?.toDescriptor().containsBuildable)
-
     return {
       baseType: this.#baseType,
       optional: this.#optional,
@@ -110,8 +102,7 @@ export class FieldBuilder<T, TOptional extends boolean = false> {
       union,
       enumValues: this.#enumValues,
       recordValueType: this.#recordValueType?.toDescriptor() ?? null,
-      containsBuildable,
-      objectSchema,
+      objectSchema
     }
   }
 }

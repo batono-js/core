@@ -4,7 +4,7 @@ import type {FieldBuilder} from "./FieldBuilder.js";
 import type {BuildResult} from "../../types/results.js";
 import {buildDefinition} from "../../BuildDefinition.js";
 import {__BATONO_INTERNAL_BUILD_SYMBOL} from "../../internal/index.js";
-import type {IBuildable, IInteractionGraph} from "../../types/types.js";
+import type {IInteractionGraph} from "../../types/types.js";
 import {validateField} from "./validateField.js";
 import {ValidationError} from "./ValidationError.js";
 import {When} from "../condition-when/when.js";
@@ -48,65 +48,44 @@ export function createBuildable<
   }
 
   const createInstance = (data: InferSchema<TSchema>): BuildableInstance<InferSchema<TSchema>, TMethods> => {
-    const withMethods: Record<string, unknown> = {}
-
-    for (const key of Object.keys(methods)) {
-      const methodName = `with${key.charAt(0).toUpperCase()}${key.slice(1)}`
-      withMethods[methodName] = (arg: unknown) => {
-        const patch = (methods as Record<string, (arg: unknown) => Partial<InferSchema<TSchema>>>)[key]!(arg)
-        return createInstance({...data, ...patch})
+    const resolveValue = (val: unknown, ig: IInteractionGraph): any => {
+      if (isBuildableItem(val)) return val[__BATONO_INTERNAL_BUILD_SYMBOL](ig);
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        return Object.fromEntries(
+          Object.entries(val).map(([k, v]) => [k, resolveValue(v, ig)])
+        );
       }
+      return val;
+    };
+
+    const withMethods: Record<string, unknown> = {};
+    for (const key of Object.keys(methods)) {
+      const methodName = `with${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+      withMethods[methodName] = (arg: unknown) => {
+        const patch = (methods as Record<string, (arg: unknown) => Partial<InferSchema<TSchema>>>)[key]!(arg);
+        return createInstance({...data, ...patch});
+      };
     }
 
     return {
       ...withMethods,
       [__BATONO_INTERNAL_BUILD_SYMBOL](ig: IInteractionGraph): BuildResult<InferSchema<TSchema>> {
-        const builtData: Record<string, unknown> = {}
+        const builtData: Record<string, unknown> = {};
 
         for (const key of schemaKeys) {
-          const value = (data as Record<string, unknown>)[key]
-          const descriptor = descriptors[key]!
+          const value = (data as Record<string, unknown>)[key];
+          const descriptor = descriptors[key]!;
 
-          if (descriptor.containsBuildable && value != null) {
-            if (descriptor.many && Array.isArray(value)) {
-              builtData[key] = value.map(item =>
-                isBuildableItem(item) ? item[__BATONO_INTERNAL_BUILD_SYMBOL](ig) : item
-              )
-            } else if (descriptor.baseType === 'object' && descriptor.objectSchema) {
-              const obj = value as Record<string, unknown>
-              builtData[key] = Object.fromEntries(
-                Object.entries(obj).map(([k, v]) => [
-                  k,
-                  isBuildableItem(v) ? v[__BATONO_INTERNAL_BUILD_SYMBOL](ig) : v
-                ])
-              )
-            } else if (descriptor.baseType === 'record') {
-              const obj = value as Record<string, unknown>
-              builtData[key] = Object.fromEntries(
-                Object.entries(obj).map(([k, v]) => [
-                  k,
-                  isBuildableItem(v)
-                    ? v[__BATONO_INTERNAL_BUILD_SYMBOL](ig)
-                    : v
-                ])
-              )
-            } else if (descriptor.baseType === 'union') {
-              builtData[key] = isBuildableItem(value)
-                ? value[__BATONO_INTERNAL_BUILD_SYMBOL](ig)
-                : value
-            } else {
-              builtData[key] = (value as IBuildable)[__BATONO_INTERNAL_BUILD_SYMBOL](ig)
-            }
+          if (descriptor.many && Array.isArray(value)) {
+            builtData[key] = value.map(item => resolveValue(item, ig))
           } else {
-            builtData[key] = value
+            builtData[key] = resolveValue(value, ig)
           }
         }
 
-        return buildDefinition(ig, {type, ...builtData} as {
-          type: string
-        } & InferSchema<TSchema>)
+        return buildDefinition(ig, {type, ...builtData} as { type: string } & InferSchema<TSchema>);
       }
-    } as BuildableInstance<InferSchema<TSchema>, TMethods>
+    } as BuildableInstance<InferSchema<TSchema>, TMethods>;
   }
 
   return (args: InferSchema<TSchema>) => {
@@ -119,7 +98,6 @@ export function createBuildable<
         dataWithDefaults[key] = descriptor.defaultValue
       }
 
-      // Resolve When *before* validate so type checks see the real value
       if (descriptor.many && Array.isArray(dataWithDefaults[key])) {
         dataWithDefaults[key] = resolveArray(dataWithDefaults[key] as unknown[])
       } else {
@@ -127,7 +105,6 @@ export function createBuildable<
       }
     }
 
-    // FIX 1 cont.: validate after resolution so When-instances are unwrapped
     validate(dataWithDefaults)
 
     return createInstance(dataWithDefaults as InferSchema<TSchema>)

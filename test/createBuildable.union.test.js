@@ -156,21 +156,4 @@ describe('createBuildable — union containsBuildable', () => {
     assert.equal(json.layout.value.type, 'inner')
     assert.equal(json.layout.value.$graph, json.$graph)
   })
-
-  test('containsBuildable is true when union contains buildable', () => {
-    const field = s.union(s.string(), s.buildable())
-    assert.equal(field.toDescriptor().containsBuildable, true)
-  })
-
-  test('containsBuildable is false when union has no buildable', () => {
-    const field = s.union(s.string(), s.number())
-    assert.equal(field.toDescriptor().containsBuildable, false)
-  })
-
-  test('containsBuildable propagates through nested union', () => {
-    const field = s.union(s.number(), s.union(s.string(), s.buildable()))
-    assert.equal(field.toDescriptor().containsBuildable, true)
-  })
-
-
 })
