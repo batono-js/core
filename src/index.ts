@@ -9,7 +9,7 @@ export * from './types/results.js'
 export * from './types/types.js'
 export * from './utils/create-buildable/index.js'
 export * from "./utils/scope/index.js";
-
+export {when} from "./utils/condition-when/when.js";
 export {InteractionGraph} from "./InteractionGraph.js";
 export {DefinedAction} from "./DefinedAction.js";
 export {SequentialAction} from "./actions/SequentialAction.js";
@@ -21,6 +21,6 @@ export const bt = {
   sequential: (...items: IBuildable[]) => new SequentialAction(...items),
   parallel: (...items: IBuildable[]) => new ParallelAction(...items),
   scope: (buildable: IBuildable, scope: Scope) => new ScopedBuildable(buildable, scope),
-  createScope: ()=>createScope()
+  createScope: () => createScope()
 }
 export type Bt = typeof bt
