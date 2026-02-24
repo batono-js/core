@@ -72,6 +72,24 @@ export function createBuildable<
               builtData[key] = value.map(item =>
                 isBuildableItem(item) ? item[__BATONO_INTERNAL_BUILD_SYMBOL](ig) : item
               )
+            } else if (descriptor.baseType === 'object' && descriptor.objectSchema) {
+              const obj = value as Record<string, unknown>
+              builtData[key] = Object.fromEntries(
+                Object.entries(obj).map(([k, v]) => [
+                  k,
+                  isBuildableItem(v) ? v[__BATONO_INTERNAL_BUILD_SYMBOL](ig) : v
+                ])
+              )
+            } else if (descriptor.baseType === 'record') {
+              const obj = value as Record<string, unknown>
+              builtData[key] = Object.fromEntries(
+                Object.entries(obj).map(([k, v]) => [
+                  k,
+                  isBuildableItem(v)
+                    ? v[__BATONO_INTERNAL_BUILD_SYMBOL](ig)
+                    : v
+                ])
+              )
             } else if (descriptor.baseType === 'union') {
               builtData[key] = isBuildableItem(value)
                 ? value[__BATONO_INTERNAL_BUILD_SYMBOL](ig)

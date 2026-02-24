@@ -13,10 +13,30 @@ export function validateField(type: string, key: string, value: unknown, descrip
   if (value == null && descriptor.nullable) return
   if (value == null && descriptor.optional) return
 
+  if (descriptor.baseType === 'enum') {
+
+    if (!descriptor.enumValues!.includes(value as string)) {
+      throw new ValidationError('invalid_type', type, key,
+        `expected one of ${descriptor.enumValues!.map(v => `"${v}"`).join(', ')}, got "${value}"`)
+    }
+    return
+  }
+
+  if (descriptor.baseType === 'record') {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      throw new ValidationError('invalid_type', type, key, `expected record, got ${typeOfForErrorMessage(value)}`)
+    }
+    for (const [recordKey, recordValue] of Object.entries(value as Record<string, unknown>)) {
+      validateField(type, `${key}.${recordKey}`, recordValue, descriptor.recordValueType!)
+    }
+    return
+  }
+
   if (descriptor.baseType === 'object') {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      throw new ValidationError('invalid_type', type, key, `expected object, got ${typeof value}`)
+      throw new ValidationError('invalid_type', type, key, `expected object, got ${typeOfForErrorMessage(value)}`)
     }
+
     if (descriptor.objectSchema) {
       for (const [fieldKey, fieldDescriptor] of Object.entries(descriptor.objectSchema)) {
         const fieldValue = (value as Record<string, unknown>)[fieldKey]

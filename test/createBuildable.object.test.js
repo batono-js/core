@@ -125,5 +125,45 @@ describe('createBuildable — s.any', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Flexible({name: 'test'}))))
     assert.equal(json.layout.extra, undefined)
   })
+  test('builds nested buildable inside object field', () => {
+    const Inner = createBuildable('inner', {label: s.string()})
+    const Outer = createBuildable('outer', {
+      meta: s.object({
+        title: s.string(),
+        content: s.buildable()
+      })
+    })
 
+    const json = JSON.parse(JSON.stringify(bt.graph(Outer({
+      meta: {
+        title: 'foo',
+        content: Inner({label: 'bar'})
+      }
+    }))))
+
+    assert.equal(json.layout.meta.title, 'foo')
+    assert.equal(json.layout.meta.content.type, 'inner')
+    assert.equal(json.layout.meta.content.label, 'bar')
+    assert.equal(json.layout.meta.content.$graph, json.$graph)
+  })
+
+  test('builds object field with mixed buildable and primitive values', () => {
+    const Inner = createBuildable('inner', {label: s.string()})
+    const Outer = createBuildable('outer', {
+      meta: s.object({
+        title: s.string(),
+        content: s.buildable()
+      })
+    })
+
+    const json = JSON.parse(JSON.stringify(bt.graph(Outer({
+      meta: {
+        title: 'plain string',
+        content: Inner({label: 'bar'})
+      }
+    }))))
+
+    assert.equal(json.layout.meta.title, 'plain string')
+    assert.equal(json.layout.meta.content.type, 'inner')
+  })
 })

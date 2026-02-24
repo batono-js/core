@@ -14,4 +14,9 @@ export const s = {
   union: <T extends FieldBuilder<unknown>[]>(...fields: T): FieldBuilder<InferField<T[number]>> =>
     new FieldBuilder<InferField<T[number]>>('union', fields as FieldBuilder<unknown>[]),
   scope: (): FieldBuilder<Scope> => new FieldBuilder('scope'),
+  enum: <T extends string>(...values: T[]): FieldBuilder<T> =>
+    new FieldBuilder('enum', null, null, values),
+  record: <T extends FieldBuilder<unknown>>(valueType: T): FieldBuilder<Record<string, InferField<T>>> =>
+    new FieldBuilder('record', null, null, null, valueType),
+
 }
