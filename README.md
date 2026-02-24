@@ -9,7 +9,7 @@
 [![codecov](https://codecov.io/gh/batono-js/core/branch/main/graph/badge.svg)](https://codecov.io/gh/batono-js/core)
 
 `@batono/core` is the foundation of the Batono protocol. It provides the `InteractionGraph` — a self-contained,
-serializable description of UI interactions. The backend defines what happens, the frontend just renders and executes.
+serializable description of UI interactions. The backend defines structure and behavior. The frontend renders and executes — nothing more.
 
 ---
 
@@ -20,6 +20,7 @@ serializable description of UI interactions. The backend defines what happens, t
 - ✅ Automatic action gathering — no manual registration
 - ✅ Graph instance tokens (`$graph`) for response consistency
 - ✅ Sequential and parallel action flows out of the box
+- ✅ Partial re-rendering via scopes
 - ✅ Fully typed with TypeScript
 
 ---
@@ -33,8 +34,6 @@ npm install @batono/core
 ---
 
 ## Basic Usage
-
-Define an `InteractionGraph` with actions on the backend, serialize it, send it to the frontend.
 
 ```ts
 import {bt} from '@batono/core'
@@ -52,304 +51,20 @@ const graph = bt.graph(
   )
 )
 
-// Serialize and send as JSON response
 res.json(graph)
 ```
 
-The serialized output contains a unique `$graph` token, a `$schema` identifier, the layout tree, and all referenced
-actions — automatically gathered during the build.
-
 ---
 
-## Action Flows
-
-### Sequential
-
-Actions execute one after another. Each step waits for the previous to complete.
-
-```ts
-const confirmAndDelete = bt.defineAction(
-  bt.sequential(
-    btUi.modal('Are you sure?'),
-    btUi.request('DELETE', '/users/42')
-  )
-)
-```
-
-### Parallel
-
-Actions execute simultaneously.
-
-```ts
-const notify = bt.defineAction(
-  bt.parallel(
-    btUi.request('POST', '/notifications'),
-    btUi.request('POST', '/audit-log')
-  )
-)
-```
-
-### Nested Flows
-
-Sequential and parallel flows can be arbitrarily nested.
-
-```ts
-const complexFlow = bt.defineAction(
-  bt.sequential(
-    btUi.modal('Confirm booking?'),
-    bt.parallel(
-      btUi.request('POST', '/bookings'),
-      btUi.request('POST', '/notifications')
-    )
-  )
-)
-```
-
----
-
-## Reusable Actions with Payload
-
-Define an action once, use it in multiple places with different payloads.
-> `withPayload()` is immutable and returns a new action instance.
-
-```ts
-const bookUnit = (id: number) => bt.defineAction(
-  btUi.request('POST', '/bookings').withPayload({id})
-)
-
-btUi.action('Book Unit A', bookUnit(1))
-btUi.action('Book Unit B', bookUnit(2))
-```
-
-Or use `withPayload` for a shared payload across all definitions:
-
-```ts
-const action = bt.defineAction(
-  btUi.request('POST', '/bookings'),
-  btUi.request('POST', '/notifications')
-)
-
-action.withPayload({id: 42}) // returns new instance, does not mutate
-```
-
----
-
-## `when`
-
-`when` is a lightweight conditional utility for expressing optional values inline — without `if` statements or ternaries scattered across layout definitions.
-
-```ts
-import {when} from '@batono/core'
-```
-
-### Basic usage
-
-```ts
-when(condition, value).else(fallback)
-```
-
-```ts
-const badge = when(user.isAdmin, AdminBadge({label: 'Admin'})).else(GuestBadge())
-```
-
-### Chaining with `elseif`
-
-```ts
-when(user.isAdmin, AdminView())
-  .elseif(user.isModerator, ModeratorView())
-  .else(DefaultView())
-```
-
-### Using `when` inside `createBuildable` fields
-
-`when` integrates directly into `createBuildable` schema fields. For scalar fields the resolved value is passed through as-is. For array fields (`.many()`), items that resolve to `false` are automatically filtered out — making conditional list entries ergonomic:
-
-```ts
-const List = createBuildable('list', {
-  title: s.string(),
-  items: s.buildable().many()
-})
-
-List({
-  title: 'Actions',
-  items: [
-    ViewButton({label: 'View'}),
-    when(canEdit, EditButton({label: 'Edit'})),      // filtered out if false
-    when(canDelete, DeleteButton({label: 'Delete'})),
-  ]
-})
-```
-
-For single buildable fields:
-
-```ts
-const Card = createBuildable('card', {
-  title: s.string(),
-  content: s.buildable()
-})
-
-Card({
-  title: 'Stats',
-  content: when(isDetailed, DetailView({...})).else(SummaryView({...}))
-})
-```
-
----
-
-## `createBuildable`
-
-For simple custom definitions, Batono provides `createBuildable` together with the `s` schema builder.
-
-It allows you to define lightweight, fully typed `IBuildable` elements without writing a full class. This is intended for **application-level extensions**, not for complex framework integrations.
-
-```ts
-import {createBuildable, s} from '@batono/core'
-
-const Stat = createBuildable('stat', {
-  name: s.string(),
-  value: s.number(),
-  variant: s.string().optional('default')
-})
-```
-
-Usage:
-
-```ts
-bt.graph(
-  Stat({name: 'Active Users', value: 42})
-)
-```
-
-### Schema Builder — `s`
-
-All field types are defined using the `s` schema builder. Every type supports `.optional()` and `.many()` modifiers via method chaining.
-
-#### Primitive types
-
-```ts
-s.string()   // required string field
-s.number()   // required number field
-s.boolean()  // required boolean field
-```
-
-#### `.optional(defaultValue?)`
-
-Makes a field optional. Accepts an optional default value.
-
-```ts
-variant: s.string().optional('primary')  // optional with default
-extra:   s.string().optional()           // optional without default, accepts any value
-```
-
-If the field is omitted or explicitly set to `undefined`, the default is used.
-
-#### `.many()`
-
-Defines the field as an array of the given type. `when()` instances inside the array are resolved automatically and falsy entries are filtered out.
-
-```ts
-tags: s.string().many()     // array of strings
-items: s.buildable().many() // array of IBuildable instances
-```
-
-#### `s.buildable()`
-
-Accepts any `IBuildable` instance as a field value, including `when()` expressions. The nested buildable is automatically built when the parent is serialized.
-
-```ts
-const Card = createBuildable('card', {
-  title: s.string(),
-  content: s.buildable()
-})
-
-Card({
-  title: 'My Card',
-  content: Stat({name: 'Users', value: 42})
-})
-```
-
-### Schema Reference
-
-| Schema | TypeScript type | Description |
-|---|---|---|
-| `s.string()` | `string` | Required string |
-| `s.number()` | `number` | Required number |
-| `s.boolean()` | `boolean` | Required boolean |
-| `s.buildable()` | `IBuildable \| When<IBuildable>` | Required nested buildable, supports `when()` |
-| `s.string().optional(default?)` | `string \| undefined` | Optional string |
-| `s.string().many()` | `string[]` | Array of strings |
-| `s.buildable().many()` | `Array<IBuildable \| When<IBuildable>>` | Array of buildables, supports `when()` |
-
-### Immutability
-
-Modifier methods return a new instance and never mutate the original:
-
-```ts
-const a = Stat({name: 'Users', value: 10})
-const b = a.withVariant('accent')
-
-// a remains unchanged
-```
-
-Custom modifiers via the third argument:
-
-```ts
-const Stat = createBuildable('stat', {
-  name: s.string(),
-  value: s.number(),
-  variant: s.string().optional('default')
-}, {
-  variant: (variant: string) => ({variant})
-})
-
-Stat({name: 'Users', value: 10}).withVariant('accent')
-```
-
-### When to Use It
-
-`createBuildable` is ideal for:
-
-* Simple custom UI elements
-* Project-specific definitions
-* Quick extensions without boilerplate
-
-For advanced behavior (custom logic, computed fields, dynamic structures), implement `IBuildable` manually.
-
----
-
-## Output Format
-
-> `$schema` identifies the protocol version.
-> `$graph` identifies the concrete graph instance.
-
-```json
-{
-  "$schema": "batono.interaction-graph.v1",
-  "$graph": "a3f9x1b2",
-  "layout": {
-    "$schema": "batono.interaction-graph.v1",
-    "$graph": "a3f9x1b2",
-    "type": "rows",
-    "items": [
-      ...
-    ]
-  },
-  "actions": {
-    "action_1": [
-      {
-        "$schema": "batono.interaction-graph.v1",
-        "$graph": "a3f9x1b2",
-        "type": "request",
-        "method": "DELETE",
-        "url": "/users/42"
-      }
-    ]
-  }
-}
-```
-
-The `$graph` token is unique per response. Every node in the graph carries the same token — the frontend renderer can
-use it to validate that all nodes belong to the same response.
+## Documentation
+
+| Topic                                           | Description                                                            |
+|-------------------------------------------------|------------------------------------------------------------------------|
+| [actions.md](docs/actions.md)                   | `defineAction`, `sequential`, `parallel`, `withPayload`                |
+| [graph.md](docs/graph.md)                       | `InteractionGraph`, output format, token generation                    |
+| [create-buildable.md](docs/create-buildable.md) | `createBuildable`, schema builder `s`, custom definitions              |
+| [when.md](docs/when.md)                         | Conditional values with `when`, `.else()`, `.elseif()`                 |
+| [scope.md](docs/scope.md)                       | Partial re-rendering with `createScope`, `ScopedBuildable`, `scopable` |
 
 ---
 
@@ -360,7 +75,8 @@ use it to validate that all nodes belong to the same response.
 - **No magic** — everything is explicit, serializable, and predictable
 - **Extensible** — build custom `IBuildable` implementations on top of the core primitives
 - **Package-boundary safe** — internal symbols prevent accidental misuse across package boundaries
-
+- **Stateless by design** — no server-side UI state required
+- 
 ---
 
 ## License
