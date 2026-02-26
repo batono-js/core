@@ -53,12 +53,12 @@ export class InteractionGraph implements IInteractionGraph {
   #actions: Record<string, Defined[]> = {}
 
   #build(): InteractionGraphPayload {
-    const layout = this.#layout[__BATONO_INTERNAL_BUILD_SYMBOL](this)
+    const $layout = this.#layout[__BATONO_INTERNAL_BUILD_SYMBOL](this)
     return {
       $schema: this.#$schema,
       $graph: this.#$graph,
-      layout,
-      actions: this.#actions
+      $layout,
+      $actions: this.#actions
     }
   }
 

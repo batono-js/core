@@ -49,6 +49,6 @@ test('resolveWhen resolves When instance before validation', () => {
     ]
   }))))
 
-  assert.equal(json.layout.items.length, 1)
-  assert.equal(json.layout.items[0].label, 'foo')
+  assert.equal(json.$layout.items.length, 1)
+  assert.equal(json.$layout.items[0].label, 'foo')
 })

@@ -83,7 +83,7 @@ export function createBuildable<
           }
         }
 
-        return buildDefinition(ig, {type, ...builtData} as { type: string } & InferSchema<TSchema>);
+        return buildDefinition(ig, type, builtData as { type: string } & InferSchema<TSchema>);
       }
     } as BuildableInstance<InferSchema<TSchema>, TMethods>;
   }

@@ -16,7 +16,7 @@ describe('createBuildable — s.union', () => {
       value: s.union(s.string(), s.number())
     })
     const json = JSON.parse(JSON.stringify(bt.graph(Item({value: 'hello'}))))
-    assert.equal(json.layout.value, 'hello')
+    assert.equal(json.$layout.value, 'hello')
   })
 
   test('accepts number in string | number union', () => {
@@ -24,7 +24,7 @@ describe('createBuildable — s.union', () => {
       value: s.union(s.string(), s.number())
     })
     const json = JSON.parse(JSON.stringify(bt.graph(Item({value: 42}))))
-    assert.equal(json.layout.value, 42)
+    assert.equal(json.$layout.value, 42)
   })
 
   test('throws when value does not match any union type', () => {
@@ -43,7 +43,7 @@ describe('createBuildable — s.union', () => {
       value: s.union(s.string(), s.buildable())
     })
     const json = JSON.parse(JSON.stringify(bt.graph(Item({value: Inner({label: 'foo'})}))))
-    assert.equal(json.layout.value.type, 'inner')
+    assert.equal(json.$layout.value.$type, 'inner')
   })
 
 })
@@ -55,7 +55,7 @@ describe('createBuildable — nullable', () => {
       value: s.string().nullable()
     })
     const json = JSON.parse(JSON.stringify(bt.graph(Item({value: null}))))
-    assert.equal(json.layout.value, null)
+    assert.equal(json.$layout.value, null)
   })
 
   test('accepts value for nullable field', () => {
@@ -63,7 +63,7 @@ describe('createBuildable — nullable', () => {
       value: s.string().nullable()
     })
     const json = JSON.parse(JSON.stringify(bt.graph(Item({value: 'hello'}))))
-    assert.equal(json.layout.value, 'hello')
+    assert.equal(json.$layout.value, 'hello')
   })
 
   test('throws on wrong type for nullable field when value is not null', () => {
@@ -90,10 +90,10 @@ describe('createBuildable — buildable many branch', () => {
       items: [Inner({label: 'A'}), Inner({label: 'B'})]
     }))))
 
-    assert.equal(json.layout.items[0].type, 'inner')
-    assert.equal(json.layout.items[0].label, 'A')
-    assert.equal(json.layout.items[1].label, 'B')
-    assert.equal(json.layout.items[0].$graph, json.$graph)
+    assert.equal(json.$layout.items[0].$type, 'inner')
+    assert.equal(json.$layout.items[0].label, 'A')
+    assert.equal(json.$layout.items[1].label, 'B')
+    assert.equal(json.$layout.items[0][`$${json.$graph}`], 1)
   })
 
   test('mixed array — buildables and primitives', () => {
@@ -106,8 +106,8 @@ describe('createBuildable — buildable many branch', () => {
       items: ['plain', Inner({label: 'B'})]
     })).toJSON()
 
-    assert.equal(json.layout.items[0], 'plain')
-    assert.equal(json.layout.items[1].type, 'inner')
+    assert.equal(json.$layout.items[0], 'plain')
+    assert.equal(json.$layout.items[1].$type, 'inner')
   })
 
 })
@@ -125,9 +125,9 @@ describe('createBuildable — union containsBuildable', () => {
       value: Inner({label: 'foo'})
     }))))
 
-    assert.equal(json.layout.value.type, 'inner')
-    assert.equal(json.layout.value.label, 'foo')
-    assert.equal(json.layout.value.$graph, json.$graph)
+    assert.equal(json.$layout.value.$type, 'inner')
+    assert.equal(json.$layout.value.label, 'foo')
+    assert.equal(json.$layout.value[`$${json.$graph}`], 1)
   })
 
   test('keeps primitive value in union with buildable', () => {
@@ -140,7 +140,7 @@ describe('createBuildable — union containsBuildable', () => {
       value: 'just a string'
     }))))
 
-    assert.equal(json.layout.value, 'just a string')
+    assert.equal(json.$layout.value, 'just a string')
   })
 
   test('nested union containsBuildable propagates', () => {
@@ -153,7 +153,7 @@ describe('createBuildable — union containsBuildable', () => {
       value: Inner({label: 'foo'})
     }))))
 
-    assert.equal(json.layout.value.type, 'inner')
-    assert.equal(json.layout.value.$graph, json.$graph)
+    assert.equal(json.$layout.value.$type, 'inner')
+    assert.equal(json.$layout.value[`$${json.$graph}`], 1)
   })
 })

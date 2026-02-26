@@ -15,8 +15,8 @@ describe('createBuildable — s.object', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({
       meta: {createdAt: '2026-02-24', updatedAt: '2026-02-24'}
     }))))
-    assert.equal(json.layout.meta.createdAt, '2026-02-24')
-    assert.equal(json.layout.meta.updatedAt, '2026-02-24')
+    assert.equal(json.$layout.meta.createdAt, '2026-02-24')
+    assert.equal(json.$layout.meta.updatedAt, '2026-02-24')
   })
 
   test('throws when object field receives non-object', () => {
@@ -58,8 +58,8 @@ describe('createBuildable — s.object', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(WithOptional({
       meta: {createdAt: '2026-02-24'}
     }))))
-    assert.equal(json.layout.meta.createdAt, '2026-02-24')
-    assert.equal(json.layout.meta.tags, undefined)
+    assert.equal(json.$layout.meta.createdAt, '2026-02-24')
+    assert.equal(json.$layout.meta.tags, undefined)
   })
 
   test('validates nested array field', () => {
@@ -72,7 +72,7 @@ describe('createBuildable — s.object', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(WithArray({
       meta: {tags: ['a', 'b', 'c']}
     }))))
-    assert.deepEqual(json.layout.meta.tags, ['a', 'b', 'c'])
+    assert.deepEqual(json.$layout.meta.tags, ['a', 'b', 'c'])
   })
 
 })
@@ -86,27 +86,27 @@ describe('createBuildable — s.any', () => {
 
   test('accepts string for any field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({name: 'test', extra: 'foo'}))))
-    assert.equal(json.layout.extra, 'foo')
+    assert.equal(json.$layout.extra, 'foo')
   })
 
   test('accepts number for any field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({name: 'test', extra: 42}))))
-    assert.equal(json.layout.extra, 42)
+    assert.equal(json.$layout.extra, 42)
   })
 
   test('accepts object for any field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({name: 'test', extra: {foo: 'bar'}}))))
-    assert.deepEqual(json.layout.extra, {foo: 'bar'})
+    assert.deepEqual(json.$layout.extra, {foo: 'bar'})
   })
 
   test('accepts array for any field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({name: 'test', extra: [1, 2, 3]}))))
-    assert.deepEqual(json.layout.extra, [1, 2, 3])
+    assert.deepEqual(json.$layout.extra, [1, 2, 3])
   })
 
   test('accepts null for any field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({name: 'test', extra: null}))))
-    assert.equal(json.layout.extra, null)
+    assert.equal(json.$layout.extra, null)
   })
 
   test('throws when any field is missing', () => {
@@ -123,7 +123,7 @@ describe('createBuildable — s.any', () => {
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(Flexible({name: 'test'}))))
-    assert.equal(json.layout.extra, undefined)
+    assert.equal(json.$layout.extra, undefined)
   })
   test('builds nested buildable inside object field', () => {
     const Inner = createBuildable('inner', {label: s.string()})
@@ -141,10 +141,10 @@ describe('createBuildable — s.any', () => {
       }
     }))))
 
-    assert.equal(json.layout.meta.title, 'foo')
-    assert.equal(json.layout.meta.content.type, 'inner')
-    assert.equal(json.layout.meta.content.label, 'bar')
-    assert.equal(json.layout.meta.content.$graph, json.$graph)
+    assert.equal(json.$layout.meta.title, 'foo')
+    assert.equal(json.$layout.meta.content.$type, 'inner')
+    assert.equal(json.$layout.meta.content.label, 'bar')
+    assert.equal(json.$layout.meta.content[`$${json.$graph}`], 1)
   })
 
   test('builds object field with mixed buildable and primitive values', () => {
@@ -163,7 +163,7 @@ describe('createBuildable — s.any', () => {
       }
     }))))
 
-    assert.equal(json.layout.meta.title, 'plain string')
-    assert.equal(json.layout.meta.content.type, 'inner')
+    assert.equal(json.$layout.meta.title, 'plain string')
+    assert.equal(json.$layout.meta.content.$type, 'inner')
   })
 })

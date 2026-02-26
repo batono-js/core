@@ -10,12 +10,12 @@ describe('createBuildable — s.record', () => {
 
   test('accepts record of strings', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({meta: {foo: 'bar', baz: 'qux'}}))))
-    assert.deepEqual(json.layout.meta, {foo: 'bar', baz: 'qux'})
+    assert.deepEqual(json.$layout.meta, {foo: 'bar', baz: 'qux'})
   })
 
   test('accepts empty record', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({meta: {}}))))
-    assert.deepEqual(json.layout.meta, {})
+    assert.deepEqual(json.$layout.meta, {})
   })
 
   test('throws when record field receives non-object', () => {
@@ -44,7 +44,7 @@ describe('createBuildable — s.record', () => {
       counts: s.record(s.number())
     })
     const json = JSON.parse(JSON.stringify(bt.graph(WithNumbers({counts: {views: 42, clicks: 7}}))))
-    assert.deepEqual(json.layout.counts, {views: 42, clicks: 7})
+    assert.deepEqual(json.$layout.counts, {views: 42, clicks: 7})
   })
 
   test('accepts record of buildables', () => {
@@ -60,9 +60,9 @@ describe('createBuildable — s.record', () => {
       }
     }))))
 
-    assert.equal(json.layout.items.a.type, 'inner')
-    assert.equal(json.layout.items.a.label, 'A')
-    assert.equal(json.layout.items.b.label, 'B')
+    assert.equal(json.$layout.items.a.$type, 'inner')
+    assert.equal(json.$layout.items.a.label, 'A')
+    assert.equal(json.$layout.items.b.label, 'B')
   })
 
   test('builds record field with mixed buildable and primitive values', () => {
@@ -77,7 +77,7 @@ describe('createBuildable — s.record', () => {
       }
     }))))
 
-    assert.equal(json.layout.meta.title, 'plain string')
+    assert.equal(json.$layout.meta.title, 'plain string')
   })
 
   test('builds record field with mixed buildable and primitive values', () => {
@@ -93,7 +93,7 @@ describe('createBuildable — s.record', () => {
       }
     }))))
 
-    assert.equal(json.layout.meta.title, 'plain string')
-    assert.equal(json.layout.meta.content.type, 'inner')
+    assert.equal(json.$layout.meta.title, 'plain string')
+    assert.equal(json.$layout.meta.content.$type, 'inner')
   })
 })

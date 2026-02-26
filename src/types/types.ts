@@ -8,8 +8,8 @@ import {
 export type InteractionGraphPayload = {
   $schema: string
   $graph: string
-  layout: Defined
-  actions: Record<string, Defined[]>
+  $layout: Defined
+  $actions: Record<string, Defined[]>
 }
 
 export interface IInteractionGraph {

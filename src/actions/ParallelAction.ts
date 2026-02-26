@@ -12,8 +12,7 @@ export class ParallelAction implements IBuildable<ParallelActionResult> {
   }
 
   [__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph: IInteractionGraph): ParallelActionResult {
-    return buildDefinition(interactionGraph, {
-      type: 'parallel' as const,
+    return buildDefinition(interactionGraph, 'parallel', {
       items: this.#items.map(item => item[__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph))
     })
   }

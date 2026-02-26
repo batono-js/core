@@ -11,8 +11,7 @@ export class Scope {
   }
 
   [__BATONO_INTERNAL_BUILD_SYMBOL](ig: IInteractionGraph): ScopeResult {
-    return buildDefinition(ig, {
-      type: 'scope' as const,
+    return buildDefinition(ig, 'scope', {
       token: this.token(ig)
     })
   }

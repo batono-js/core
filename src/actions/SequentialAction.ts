@@ -11,8 +11,7 @@ export class SequentialAction implements IBuildable<SequentialActionResult> {
   }
 
   [__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph: IInteractionGraph): SequentialActionResult {
-    return buildDefinition(interactionGraph, {
-      type: 'sequential' as const,
+    return buildDefinition(interactionGraph, 'sequential', {
       items: this.#items.map(item => item[__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph))
     })
   }

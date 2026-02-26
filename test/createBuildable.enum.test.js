@@ -10,7 +10,7 @@ describe('createBuildable — s.enum', () => {
 
   test('accepts valid enum value', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Item({variant: 'primary'}))))
-    assert.equal(json.layout.variant, 'primary')
+    assert.equal(json.$layout.variant, 'primary')
   })
 
   test('throws on invalid enum value', () => {
@@ -32,7 +32,7 @@ describe('createBuildable — s.enum', () => {
       variant: s.enum('primary', 'secondary').optional()
     })
     const json = JSON.parse(JSON.stringify(bt.graph(WithOptional({}))))
-    assert.equal(json.layout.variant, undefined)
+    assert.equal(json.$layout.variant, undefined)
   })
 
   test('accepts optional enum with default', () => {
@@ -40,7 +40,7 @@ describe('createBuildable — s.enum', () => {
       variant: s.enum('primary', 'secondary').optional('primary')
     })
     const json = JSON.parse(JSON.stringify(bt.graph(WithDefault({}))))
-    assert.equal(json.layout.variant, 'primary')
+    assert.equal(json.$layout.variant, 'primary')
   })
 
 })

@@ -14,14 +14,14 @@ describe('createBuildable', () => {
 
   test('builds correctly into graph', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Stat({name: 'test', num: 1}))))
-    assert.equal(json.layout.type, 'stat')
-    assert.equal(json.layout.name, 'test')
-    assert.equal(json.layout.num, 1)
+    assert.equal(json.$layout.$type, 'stat')
+    assert.equal(json.$layout.name, 'test')
+    assert.equal(json.$layout.num, 1)
   })
 
   test('uses default value for optional field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Stat({name: 'test', num: 1}))))
-    assert.equal(json.layout.variant, 'foo')
+    assert.equal(json.$layout.variant, 'foo')
   })
 
   test('withVariant returns new instance', () => {
@@ -34,7 +34,7 @@ describe('createBuildable', () => {
     const a = Stat({name: 'test', num: 1})
     a.withVariant('bar')
     const json = JSON.parse(JSON.stringify(bt.graph(a)))
-    assert.equal(json.layout.variant, 'foo')
+    assert.equal(json.$layout.variant, 'foo')
   })
 
   test('throws on missing required field', () => {
@@ -53,7 +53,7 @@ describe('createBuildable', () => {
 
   test('accepts null for optional field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(Stat({name: 'test', num: 1, variant: null}))))
-    assert.equal(json.layout.variant, null)
+    assert.equal(json.$layout.variant, null)
   })
 
   test('accepts any type for optional field without default', () => {
@@ -63,7 +63,7 @@ describe('createBuildable', () => {
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(Flexible({name: 'test', extra: '42'}))))
-    assert.equal(json.layout.extra, '42')
+    assert.equal(json.$layout.extra, '42')
   })
 
   test('overrides default value when optional field is provided', () => {
@@ -73,7 +73,7 @@ describe('createBuildable', () => {
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(WithDefault({name: 'test', variant: 'secondary'}))))
-    assert.equal(json.layout.variant, 'secondary')
+    assert.equal(json.$layout.variant, 'secondary')
   })
 
   test('validates type against default value type for optional field with default', () => {
@@ -95,7 +95,7 @@ describe('createBuildable', () => {
     })
 
     const json = JSON.parse(JSON.stringify(bt.graph(WithDefault({name: 'test'}))))
-    assert.equal(json.layout.variant, 'primary')
+    assert.equal(json.$layout.variant, 'primary')
   })
 
 })
@@ -109,7 +109,7 @@ describe('createBuildable — arrayOf', () => {
 
   test('builds with array field', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(List({title: 'My List', tags: ['a', 'b', 'c']}))))
-    assert.deepEqual(json.layout.tags, ['a', 'b', 'c'])
+    assert.deepEqual(json.$layout.tags, ['a', 'b', 'c'])
   })
 
   test('throws when array field receives non-array', () => {
@@ -121,7 +121,7 @@ describe('createBuildable — arrayOf', () => {
 
   test('accepts empty array', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(List({title: 'My List', tags: []}))))
-    assert.deepEqual(json.layout.tags, [])
+    assert.deepEqual(json.$layout.tags, [])
   })
 
 })
@@ -143,9 +143,9 @@ describe('createBuildable — buildable', () => {
       title: 'My Card',
       content: Stat({name: 'Users', value: 42})
     }))))
-    assert.equal(json.layout.content.type, 'stat')
-    assert.equal(json.layout.content.name, 'Users')
-    assert.equal(json.layout.content.value, 42)
+    assert.equal(json.$layout.content.$type, 'stat')
+    assert.equal(json.$layout.content.name, 'Users')
+    assert.equal(json.$layout.content.value, 42)
   })
 
   test('nested buildable carries $graph token', () => {
@@ -153,7 +153,7 @@ describe('createBuildable — buildable', () => {
       title: 'My Card',
       content: Stat({name: 'Users', value: 42})
     }))))
-    assert.equal(json.layout.content.$graph, json.$graph)
+    assert.equal(json.$layout.content[`$${json.$graph}`], 1)
   })
 
   test('throws when buildable field receives non-buildable', () => {
@@ -182,11 +182,11 @@ describe('createBuildable — buildable', () => {
       ]
     }))))
 
-    assert.equal(json.layout.items.length, 3)
-    assert.equal(json.layout.items[0].type, 'item')
-    assert.equal(json.layout.items[0].label, 'A')
-    assert.equal(json.layout.items[2].label, 'C')
-    assert.equal(json.layout.items[0].$graph, json.$graph)
+    assert.equal(json.$layout.items.length, 3)
+    assert.equal(json.$layout.items[0].$type, 'item')
+    assert.equal(json.$layout.items[0].label, 'A')
+    assert.equal(json.$layout.items[2].label, 'C')
+    assert.equal(json.$layout.items[0][`$${json.$graph}`], 1)
   })
 
   test('accepts boolean value', () => {
@@ -194,7 +194,7 @@ describe('createBuildable — buildable', () => {
       active: s.boolean()
     })
     const json = JSON.parse(JSON.stringify(bt.graph(Item({active: true}))))
-    assert.equal(json.layout.active, true)
+    assert.equal(json.$layout.active, true)
   })
 
   test('throws on wrong type for boolean field', () => {

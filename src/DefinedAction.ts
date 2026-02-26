@@ -5,6 +5,7 @@ import {
 } from "./internal/internalKeys.js";
 import type {IActionDefinition, IBuildable, IInteractionGraph} from "./types/types.js";
 import type {ActionReferenceResult} from "./types/results.js";
+import {buildDefinition} from "./BuildDefinition.js";
 
 export class DefinedAction implements IActionDefinition<DefinedAction, ActionReferenceResult> {
 
@@ -30,12 +31,9 @@ export class DefinedAction implements IActionDefinition<DefinedAction, ActionRef
       this.#definitions.map(x => x[__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph))
     )
 
-    return {
-      $schema: interactionGraph.$schema,
-      $graph: interactionGraph.$graph,
-      type: 'action-reference' as const,
+    return buildDefinition(interactionGraph, 'action-reference', {
       action: actionName,
       payload: this.#payload
-    }
+    })
   }
 }
