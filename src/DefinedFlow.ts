@@ -1,13 +1,13 @@
 import {
   __BATONO_INTERNAL_BUILD_SYMBOL,
-  INTERNAL_ADD_ACTION_KEY,
-  INTERNAL_REGISTER_ACTION_KEY
+  INTERNAL_ADD_FLOW_KEY,
+  INTERNAL_REGISTER_FLOW_KEY
 } from "./internal/internalKeys.js";
 import type {IActionDefinition, IBuildable, IInteractionGraph} from "./types/types.js";
-import type {ActionReferenceResult} from "./types/results.js";
+import type {FlowReferenceResult} from "./types/results.js";
 import {buildDefinition} from "./BuildDefinition.js";
 
-export class DefinedAction implements IActionDefinition<DefinedAction, ActionReferenceResult> {
+export class DefinedFlow implements IActionDefinition<DefinedFlow, FlowReferenceResult> {
 
   readonly #definitions: IBuildable[]
 
@@ -17,22 +17,22 @@ export class DefinedAction implements IActionDefinition<DefinedAction, ActionRef
     this.#definitions = definitions
   }
 
-  withPayload(payload: Record<string, unknown>): DefinedAction {
-    const da = new DefinedAction(...this.#definitions)
+  withPayload(payload: Record<string, unknown>): DefinedFlow {
+    const da = new DefinedFlow(...this.#definitions)
     da.#payload = payload
     return da
   }
 
-  [__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph: IInteractionGraph): ActionReferenceResult {
+  [__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph: IInteractionGraph): FlowReferenceResult {
 
-    const actionName = interactionGraph[INTERNAL_ADD_ACTION_KEY](this)
-    interactionGraph[INTERNAL_REGISTER_ACTION_KEY](
-      actionName,
+    const flowName = interactionGraph[INTERNAL_ADD_FLOW_KEY](this)
+    interactionGraph[INTERNAL_REGISTER_FLOW_KEY](
+      flowName,
       this.#definitions.map(x => x[__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph))
     )
 
     return buildDefinition(interactionGraph, 'action-reference', {
-      action: actionName,
+      $flow: flowName,
       payload: this.#payload
     })
   }

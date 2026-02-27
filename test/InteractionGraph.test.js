@@ -43,12 +43,12 @@ describe('InteractionGraph', () => {
     assert.ok('$schema' in json)
     assert.ok('$graph' in json)
     assert.ok('$layout' in json)
-    assert.ok('$actions' in json)
+    assert.ok('$flows' in json)
   })
 
-  test('actions is empty initially', () => {
+  test('flows is empty initially', () => {
     const json = JSON.parse(JSON.stringify(bt.graph(mockBuildable())))
-    assert.equal(Object.keys(json.$actions).length, 0)
+    assert.equal(Object.keys(json.$flows).length, 0)
   })
 
 })
@@ -56,38 +56,38 @@ describe('InteractionGraph', () => {
 describe('DefinedAction', () => {
 
   test('withPayload returns new instance', () => {
-    const a = bt.defineAction(mockBuildable())
+    const a = bt.defineFlow(mockBuildable())
     const b = a.withPayload({id: 1})
     assert.notEqual(a, b)
   })
 
   test('withPayload does not mutate original', () => {
-    const a = bt.defineAction(mockBuildable())
+    const a = bt.defineFlow(mockBuildable())
     a.withPayload({id: 1})
     const graph = bt.graph(mockBuildable())
     a[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
     const json = JSON.parse(JSON.stringify(graph))
-    assert.equal(json.$actions.action_1.payload, undefined)
+    assert.equal(json.$flows.flow_1.payload, undefined)
   })
 
   test('is automatically registered in graph', () => {
-    const action = bt.defineAction(mockBuildable())
+    const flow = bt.defineFlow(mockBuildable())
     const layout = {
       [__BATONO_INTERNAL_BUILD_SYMBOL]: (graph) => {
-        action[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
+        flow[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
         return {$schema: graph.$schema, $graph: graph.$graph, type: 'mock'}
       }
     }
     const json = JSON.parse(JSON.stringify(bt.graph(layout)))
-    assert.equal(Object.keys(json.$actions).length, 1)
+    assert.equal(Object.keys(json.$flows).length, 1)
   })
 
-  test('payload is included in action reference', () => {
-    const action = bt.defineAction(mockBuildable()).withPayload({id: 42})
+  test('payload is included in flow reference', () => {
+    const flow = bt.defineFlow(mockBuildable()).withPayload({id: 42})
     const graph = bt.graph(mockBuildable())
-    action[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
+    flow[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
     const json = JSON.parse(JSON.stringify(graph))
-    assert.deepEqual(json.$actions.action_1[0].payload, undefined) // payload ist auf der reference, nicht der definition
+    assert.deepEqual(json.$flows.flow_1[0].payload, undefined) // payload ist auf der reference, nicht der definition
   })
 
 })
@@ -130,16 +130,16 @@ describe('ParallelAction', () => {
     assert.equal(result.items[1].$type, 'modal')
   })
 
-  test('same action instance used twice is registered only once', () => {
-    const action = bt.defineAction(mockBuildable())
+  test('same flow instance used twice is registered only once', () => {
+    const flow = bt.defineFlow(mockBuildable())
     const layout = {
       [__BATONO_INTERNAL_BUILD_SYMBOL]: (graph) => {
-        action[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
-        action[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
+        flow[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
+        flow[__BATONO_INTERNAL_BUILD_SYMBOL](graph)
         return {$schema: graph.$schema, $graph: graph.$graph, type: 'mock'}
       }
     }
     const json = JSON.parse(JSON.stringify(bt.graph(layout)))
-    assert.equal(Object.keys(json.$actions).length, 1)
+    assert.equal(Object.keys(json.$flows).length, 1)
   })
 })
