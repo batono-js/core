@@ -1,5 +1,5 @@
 import {type BuildableConstructor, type BuildableInstance, type InferSchema,} from "./schema-types.js";
-import {isBuildableItem} from "./utils.js";
+import {isBuildableItem, resolveArray, resolveWhen} from "./utils.js";
 import type {FieldBuilder} from "./FieldBuilder.js";
 import type {BuildResult} from "../../types/results.js";
 import {buildDefinition} from "../../BuildDefinition.js";
@@ -7,13 +7,6 @@ import {__BATONO_INTERNAL_BUILD_SYMBOL} from "../../internal/index.js";
 import type {IInteractionGraph} from "../../types/types.js";
 import {validateField} from "./validateField.js";
 import {ValidationError} from "./ValidationError.js";
-import {When} from "../condition-when/when.js";
-
-const resolveWhen = (value: unknown): unknown =>
-  value instanceof When ? value.valueOf() : value
-
-const resolveArray = (arr: unknown[]): unknown[] =>
-  arr.map(resolveWhen).filter(v => v !== false && v !== null && v !== undefined)
 
 
 export function createBuildable<
