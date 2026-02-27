@@ -1,9 +1,10 @@
-import type {FlowReferenceResult, Defined} from "./results.js";
+import type {Defined, FlowReferenceResult} from "./results.js";
 import {
   __BATONO_INTERNAL_BUILD_SYMBOL,
   INTERNAL_ADD_FLOW_KEY,
   INTERNAL_REGISTER_FLOW_KEY
 } from "../internal/internalKeys.js";
+import type {When} from "../utils/condition-when/when.js";
 
 export type InteractionGraphPayload = {
   $schema: string
@@ -39,3 +40,7 @@ export interface IActionDefinition<TSelf extends IActionDefinition<TSelf, TResul
 export interface IWithPayload<TSelf> {
   withPayload(payload: Record<string, unknown>): TSelf
 }
+
+export type Whenable<T> = T | When<T>
+
+export type ConditionalBuildable = Whenable<IBuildable>

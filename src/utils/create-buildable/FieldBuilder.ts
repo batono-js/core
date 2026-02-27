@@ -1,5 +1,5 @@
 import {ValidationError} from "./ValidationError.js";
-import type {When} from "../condition-when/when.js";
+import type {Whenable} from "../../types/types.js";
 
 type BaseType = 'string'
   | 'enum'
@@ -23,8 +23,6 @@ export interface FieldDescriptor {
   enumValues: string[] | null
   recordValueType: FieldDescriptor | null
 }
-
-export type Whenable<T> = T | When<T>
 
 export class FieldBuilder<T, TOptional extends boolean = false> {
   readonly #baseType: BaseType
