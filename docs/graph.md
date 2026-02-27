@@ -31,7 +31,7 @@ Builds the graph from a root `IBuildable`. During the build:
     "items": [
       {
         "$g_745jwh": 1,
-        "$type": "action-reference",
+        "$type": "flow-reference",
         "$flow": "flow_1"
       }
     ]

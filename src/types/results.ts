@@ -7,7 +7,7 @@ export type Defined = GraphDiscriminator & {
 }
 
 export interface FlowReferenceResult extends Defined {
-  $type: 'action-reference'
+  $type: 'flow-reference'
   $flow: string
   payload?: Record<string, unknown> | undefined
 }

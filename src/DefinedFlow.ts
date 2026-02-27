@@ -31,7 +31,7 @@ export class DefinedFlow implements IActionDefinition<DefinedFlow, FlowReference
       this.#definitions.map(x => x[__BATONO_INTERNAL_BUILD_SYMBOL](interactionGraph))
     )
 
-    return buildDefinition(interactionGraph, 'action-reference', {
+    return buildDefinition(interactionGraph, 'flow-reference', {
       $flow: flowName,
       payload: this.#payload
     })
