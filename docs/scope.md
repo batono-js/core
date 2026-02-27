@@ -30,15 +30,13 @@ The serialized output:
 
 ```json
 {
-  "type": "table",
-  "$node": [
-    "s_1"
-  ]
+  "$g_745jwh": 1,
+  "$type": "table",
+  "$node": ["s_1"]
 }
 ```
 
-When the client triggers an action with `replace: tableScope`, the server returns a new graph. The client replaces all
-nodes with `$node: "s_1"` in the DOM.
+When the client triggers an action with `replace: tableScope`, the server returns a new graph. The client replaces all nodes with `$node: "s_1"` in the DOM.
 
 ---
 
@@ -48,8 +46,7 @@ nodes with `$node: "s_1"` in the DOM.
 const scope = bt.createScope()
 ```
 
-Creates a new `Scope` instance. The token is generated lazily — on the first build call, `ig.nextToken('n')` is called
-and the result is cached. The same `Scope` instance used on multiple nodes will always produce the same token.
+Creates a new `Scope` instance. The token is generated lazily — on the first build call, `ig.nextToken('s')` is called and the result is cached. The same `Scope` instance used on multiple nodes will always produce the same token.
 
 ---
 
@@ -59,8 +56,7 @@ and the result is cached. The same `Scope` instance used on multiple nodes will 
 bt.scope(table, tableScope)
 ```
 
-Wraps a buildable with a `ScopedBuildable` that adds `$node` to the serialized output. Does not mutate the original
-buildable.
+Wraps a buildable with a `ScopedBuildable` that adds `$node` to the serialized output. Does not mutate the original buildable.
 
 ---
 
@@ -102,11 +98,9 @@ Serialized output:
 
 ```json
 {
-  "type": "table",
-  "$node": [
-    "s_1",
-    "s_2"
-  ]
+  "$g_745jwh": 1,
+  "$type": "table",
+  "$node": ["s_1", "s_2"]
 }
 ```
 
@@ -135,8 +129,7 @@ Both `header` and `table` will have the same `$node` token. A replace action tar
 
 ## Token Generation
 
-Tokens are generated per `InteractionGraph` using an internal counter — `s_1`, `s_2`, `s_3`. They are unique within a
-graph. The `$graph` token separates graphs from different responses.
+Tokens are generated per `InteractionGraph` using an internal counter — `s_1`, `s_2`, `s_3`. They are unique within a graph. The `$graph` token separates graphs from different responses.
 
 ---
 
@@ -160,10 +153,11 @@ Serialized:
 
 ```json
 {
-  "type": "button",
+  "$g_745jwh": 1,
+  "$type": "button",
   "label": "Reload",
   "replace": {
-    "type": "scope",
+    "$type": "scope",
     "token": "s_1"
   }
 }

@@ -13,8 +13,8 @@ res.json(graph)
 
 Builds the graph from a root `IBuildable`. During the build:
 
-- Every node receives the same `$schema` and `$graph` token
-- All referenced `DefinedAction` instances are gathered automatically
+- Every child node receives a `$g_<id>` discriminator key for runtime identification
+- All referenced `DefinedFlow` instances are gathered automatically into `$flows`
 - Scope tokens are generated lazily via the graph's internal counter
 
 ---
@@ -25,18 +25,22 @@ Builds the graph from a root `IBuildable`. During the build:
 {
   "$schema": "batono.interaction-graph.v1",
   "$graph": "g_745jwh",
-  "layout": {
-    "$schema": "batono.interaction-graph.v1",
-    "$graph": "g_745jwh",
-    "type": "rows",
-    "items": [...]
-  },
-  "actions": {
-    "action_1": [
+  "$layout": {
+    "$g_745jwh": 1,
+    "$type": "rows",
+    "items": [
       {
-        "$schema": "batono.interaction-graph.v1",
-        "$graph": "g_745jwh",
-        "type": "request",
+        "$g_745jwh": 1,
+        "$type": "action-reference",
+        "$flow": "flow_1"
+      }
+    ]
+  },
+  "$flows": {
+    "flow_1": [
+      {
+        "$g_745jwh": 1,
+        "$type": "request",
         "method": "POST",
         "url": "/bookings"
       }
@@ -51,15 +55,19 @@ Identifies the protocol version — `batono.interaction-graph.v1`. Used by the r
 
 ### `$graph`
 
-A unique token per response, generated with `crypto.randomUUID()`. Every node in the graph carries the same token — the renderer uses it to verify all nodes belong to the same response.
+A unique token per response, generated with `crypto.randomUUID()`. Present only on the root wrapper object.
 
-### `layout`
+### `$g_<id>`
+
+Every child node carries a `$g_<id>: 1` key derived from the graph token. The renderer uses this to identify nodes as belonging to the current graph and to distinguish buildable nodes from plain values at runtime.
+
+### `$layout`
 
 The root node of the UI tree. Every nested node is a serialized `IBuildable`.
 
-### `actions`
+### `$flows`
 
-A flat map of all actions referenced anywhere in the layout. Keys are auto-generated (`action_1`, `action_2`, ...). Each value is an array of action definitions supporting sequential flows.
+A flat map of all flows referenced anywhere in the layout. Keys are auto-generated (`flow_1`, `flow_2`, ...). Each value is an array of action definitions supporting sequential and parallel execution.
 
 ---
 
@@ -69,8 +77,9 @@ Nodes marked with `.scope()` carry a `$node` array:
 
 ```json
 {
-  "type": "table",
-  "$node": ["n_1"]
+  "$g_745jwh": 1,
+  "$type": "table",
+  "$node": ["s_1"]
 }
 ```
 
@@ -80,10 +89,10 @@ The client uses `$node` to locate nodes for partial re-rendering. See [scope.md]
 
 ## Token Generation
 
-| Token | Source | Format |
-|---|---|---|
-| `$graph` | `crypto.randomUUID()` | `g_a3f9x1` |
-| `$node` / action keys | Internal counter per graph | `n_1`, `action_1` |
+| Token          | Source                      | Format      |
+|----------------|-----------------------------|-------------|
+| `$graph`       | `crypto.randomUUID()`       | `g_a3f9x1`  |
+| `$node` / flow keys | Internal counter per graph | `s_1`, `flow_1` |
 
 Tokens are unique within a graph. `$graph` separates graphs from different responses.
 
@@ -91,7 +100,7 @@ Tokens are unique within a graph. `$graph` separates graphs from different respo
 
 ## Validation
 
-The renderer should validate every incoming node:
+The renderer should validate every incoming graph:
 
 ```ts
 import type {InteractionGraphPayload} from '@batono/core'
@@ -102,6 +111,18 @@ function isBatonoGraph(json: unknown): json is InteractionGraphPayload {
     json !== null &&
     '$schema' in json &&
     (json as any).$schema === 'batono.interaction-graph.v1'
+  )
+}
+```
+
+For individual nodes, check for the graph discriminator:
+
+```ts
+function isBatonoNode(json: unknown, graphId: string): boolean {
+  return (
+    typeof json === 'object' &&
+    json !== null &&
+    `$${graphId}` in json
   )
 }
 ```

@@ -16,8 +16,8 @@ serializable description of UI interactions. The backend defines structure and b
 ## Features
 
 - ✅ No dependencies
-- ✅ Backend-driven action definitions
-- ✅ Automatic action gathering — no manual registration
+- ✅ Backend-driven flow definitions
+- ✅ Automatic flow gathering — no manual registration
 - ✅ Graph instance tokens (`$graph`) for response consistency
 - ✅ Sequential and parallel action flows out of the box
 - ✅ Partial re-rendering via scopes
@@ -37,16 +37,16 @@ npm install @batono/core
 
 ```ts
 import {bt} from '@batono/core'
-import {bt as btUi} from '@batono/ui'
+import {RequestAction, NavigateAction} from '@batono/ui'
 
-const deleteUser = bt.defineAction(
-  btUi.request('DELETE', '/users/42')
+const deleteUser = bt.defineFlow(
+  new RequestAction('DELETE', '/users/42')
 )
 
 const graph = bt.graph(
-  btUi.rows(
-    btUi.row(
-      btUi.action('Delete User', deleteUser, {variant: 'ghost'})
+  bt.rows(
+    bt.row(
+      bt.action('Delete User', deleteUser)
     )
   )
 )
@@ -60,7 +60,7 @@ res.json(graph)
 
 | Topic                                           | Description                                                            |
 |-------------------------------------------------|------------------------------------------------------------------------|
-| [actions.md](docs/actions.md)                   | `defineAction`, `sequential`, `parallel`, `withPayload`                |
+| [flows.md](docs/flows.md)                       | `defineFlow`, `sequential`, `parallel`, `withPayload`                  |
 | [graph.md](docs/graph.md)                       | `InteractionGraph`, output format, token generation                    |
 | [create-buildable.md](docs/create-buildable.md) | `createBuildable`, schema builder `s`, custom definitions              |
 | [when.md](docs/when.md)                         | Conditional values with `when`, `.else()`, `.elseif()`                 |
@@ -71,12 +71,12 @@ res.json(graph)
 ## Design Goals
 
 - **Protocol over implementation** — `@batono/core` defines the contract, not the UI
-- **Actions are first-class** — defined once, referenced anywhere, gathered automatically
+- **Flows are first-class** — defined once, referenced anywhere, gathered automatically
 - **No magic** — everything is explicit, serializable, and predictable
 - **Extensible** — build custom `IBuildable` implementations on top of the core primitives
 - **Package-boundary safe** — internal symbols prevent accidental misuse across package boundaries
 - **Stateless by design** — no server-side UI state required
-- 
+
 ---
 
 ## License
