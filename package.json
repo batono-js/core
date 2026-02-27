@@ -1,6 +1,6 @@
 {
   "name": "@batono/core",
-  "version": "0.0.20-alpha.5",
+  "version": "0.0.20-alpha.6",
   "description": "The protocol engine behind Batono — server-driven UI interactions for the web.",
   "license": "MIT",
   "author": "Pascal Pfeifer <pascal@pfeifer.zone>",
