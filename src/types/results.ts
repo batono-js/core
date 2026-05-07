@@ -1,6 +1,9 @@
 export type GraphDiscriminatorKey = `$g_${string}`
 
-export type GraphDiscriminator = { [key: GraphDiscriminatorKey]: 1 }
+export type GraphDiscriminator = {
+  $btGraph: GraphDiscriminatorKey
+  [key: GraphDiscriminatorKey]: 1
+}
 
 export type Defined = GraphDiscriminator & {
   $type: string

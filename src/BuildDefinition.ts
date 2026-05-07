@@ -9,6 +9,7 @@ export function buildDefinition<T extends Record<string, unknown>, TType extends
   const igKey = `$${interactionGraph.$graph}` as GraphDiscriminatorKey
   const finalBuild = {
     [igKey]: 1,
+    $btGraph: igKey,
     $type: type,
     ...buildData,
   }
