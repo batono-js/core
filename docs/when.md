@@ -34,21 +34,36 @@ bt.inline(
 
 ---
 
+## Factory values
+
+The `value` argument and the arguments to `.else()` / `.elseif()` can be a factory function. It is only called when the condition matches — useful for deferring work or keeping unrelated code out of scope:
+
+```ts
+when(customer.isNew, () => expensiveNewBadge())
+  .else(() => expensiveReturningBadge())
+```
+
+The factory is never called when the branch is not taken.
+
+---
+
 ## `.else()`
 
 ```ts
 when(customer.isNew, newBadge).else(returningBadge)
+// or with a factory:
+when(customer.isNew, () => newBadge()).else(() => returningBadge())
 ```
 
-Returns `newBadge` if condition is true, `returningBadge` otherwise.
+Returns the first value if condition is true, the fallback otherwise.
 
 ---
 
 ## `.elseif()`
 
 ```ts
-when(user.isNew && user.isChild, childItem)
-  .elseif(user.isNew && user.isParent, parentItem)
+when(user.isNew && user.isChild, () => childItem)
+  .elseif(user.isNew && user.isParent, () => parentItem)
   .else(defaultItem)
 ```
 
